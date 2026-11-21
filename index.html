@@ -1,0 +1,633 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLACK OPS // COMMAND V2</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap');
+
+:root{
+ --bg:#050809;
+ --panel:#0a1113;
+ --line:#20353a;
+ --green:#6dff9b;
+ --red:#ff4054;
+ --amber:#ffbd59;
+ --cyan:#5deaff;
+ --text:#a8b8bc;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:var(--bg);color:var(--text);
+ font-family:'Share Tech Mono',monospace;
+ overflow:hidden;
+}
+body:after{
+ content:"";position:fixed;inset:0;pointer-events:none;z-index:99;
+ background:repeating-linear-gradient(
+ transparent 0px,transparent 2px,
+ rgba(0,0,0,.12) 3px
+ );
+}
+.topbar{
+ height:56px;display:flex;align-items:center;justify-content:space-between;
+ padding:0 18px;background:#090e10;border-bottom:1px solid #27393c;
+}
+.brand{
+ font-family:Orbitron,sans-serif;font-weight:900;
+ letter-spacing:2px;font-size:16px;color:#e6f5f3
+}
+.brand span{color:var(--red)}
+.topright{display:flex;gap:20px;align-items:center;font-size:11px}
+.live{color:var(--red);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.3}}
+.clock{color:var(--cyan)}
+.layout{
+ height:calc(100vh - 56px);padding:10px;
+ display:grid;grid-template-columns:230px 1fr 300px;
+ grid-template-rows:1fr 155px;gap:10px
+}
+.panel{
+ background:var(--panel);border:1px solid var(--line);
+ position:relative;overflow:hidden
+}
+.heading{
+ height:34px;padding:9px 11px;
+ border-bottom:1px solid var(--line);
+ font-family:Orbitron,sans-serif;font-size:10px;
+ letter-spacing:1.4px;color:#9db9bd;
+ display:flex;justify-content:space-between
+}
+.heading em{font-style:normal;color:var(--green)}
+.left{grid-row:1/3;display:flex;flex-direction:column}
+.right{grid-row:1/3;display:flex;flex-direction:column;gap:10px}
+.map{grid-row:1;grid-column:2}
+.bottom{grid-row:2;grid-column:2}
+.map canvas{width:100%;height:100%;position:absolute;inset:0}
+.mapoverlay{
+ position:absolute;pointer-events:none;inset:40px 10px 10px;
+ display:flex;justify-content:space-between;
+ font-size:10px;color:#476267
+}
+.mapinfo{position:absolute;left:14px;top:48px;color:#52777c;font-size:10px}
+.mapinfo div{margin-bottom:5px}
+.maplabel{position:absolute;right:14px;bottom:12px;color:#52777c;font-size:10px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line)}
+.metric{background:#091011;padding:12px}
+.metric label{font-size:9px;color:#60777b}
+.metric strong{
+ display:block;font-family:Orbitron,sans-serif;font-size:19px;
+ color:var(--green);margin-top:8px
+}
+.metric .warn{color:var(--red)}
+.metric .gold{color:var(--amber)}
+.section{padding:10px;border-bottom:1px solid var(--line)}
+.label{font-size:10px;color:#6b8589;margin-bottom:8px}
+.bigstatus{
+ font-family:Orbitron,sans-serif;font-size:17px;color:var(--green);
+ text-shadow:0 0 12px #33ff7755
+}
+.level{
+ display:flex;gap:5px;margin-top:12px
+}
+.level div{height:7px;flex:1;background:#1a282a}
+.level div.active{background:var(--green);box-shadow:0 0 8px #55ff7788}
+.level div.danger{background:var(--red)}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px}
+button{
+ background:#101c1e;border:1px solid #32464a;color:#a9c3c7;
+ font-family:Orbitron,sans-serif;font-size:9px;padding:11px 5px;
+ cursor:pointer;transition:.15s
+}
+button:hover{background:#1c3435;border-color:var(--cyan);color:white}
+button.redbtn{border-color:#74323a;color:#ff7180}
+button.greenbtn{border-color:#356c48;color:var(--green)}
+button:active{transform:scale(.97)}
+.log{padding:9px;overflow-y:auto;flex:1;font-size:10px}
+.log div{padding:4px 0;border-bottom:1px solid #101b1d}
+.log .red{color:var(--red)}
+.log .green{color:var(--green)}
+.log .amber{color:var(--amber)}
+.log .cyan{color:var(--cyan)}
+.radarbox{height:205px;position:relative;display:flex;align-items:center;justify-content:center}
+#radar{width:185px;height:185px}
+.radartext{
+ position:absolute;bottom:8px;font-size:9px;color:#557479;
+ letter-spacing:1px
+}
+.threats{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px}
+.threat{
+ border:1px solid #253638;background:#0c1516;padding:9px
+}
+.threat small{font-size:9px;color:#60797c}
+.threat strong{display:block;margin-top:6px;font-size:14px;color:var(--amber)}
+.footerstats{
+ display:flex;justify-content:space-around;padding:12px;font-size:10px;
+ color:#668084;border-top:1px solid var(--line)
+}
+.bar{height:4px;background:#172426;margin-top:8px}
+.bar span{display:block;height:100%;background:var(--green);width:72%}
+.bottominner{
+ display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;height:100%
+}
+.bottomcell{padding:12px;border-right:1px solid var(--line)}
+.bottomcell h4{font-size:9px;font-weight:normal;color:#627b7e;margin:0 0 12px}
+.bottomcell strong{font-family:Orbitron;font-size:18px;color:var(--cyan)}
+.bottomcell p{font-size:10px;color:#60777b;margin:7px 0}
+.progress{height:3px;background:#1a282b;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--cyan)}
+.missiontitle{color:var(--green)!important}
+@media(max-width:950px){
+ body{overflow:auto}
+ .layout{height:auto;min-height:calc(100vh - 56px);
+ grid-template-columns:190px 1fr;grid-template-rows:500px 180px auto}
+ .left{grid-row:1/3}
+ .map{grid-column:2;grid-row:1}
+ .bottom{grid-column:2;grid-row:2}
+ .right{grid-column:1/3;grid-row:3;display:grid;grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+ .topbar{padding:0 10px}
+ .brand{font-size:12px}
+ .topright{gap:8px;font-size:9px}
+ .layout{display:flex;flex-direction:column;padding:7px}
+ .map{height:430px}
+ .left{min-height:380px}
+ .right{display:flex}
+ .bottom{height:160px}
+ .radarbox{height:200px}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+ <div class="brand">BLACK<span>OPS</span> // COMMAND V2</div>
+ <div class="topright">
+  <span class="live">● SIMULATION</span>
+  <span class="clock" id="clock">00:00:00</span>
+  <span>SYS ONLINE</span>
+ </div>
+</header>
+
+<div class="layout">
+
+<!-- LEFT COLUMN -->
+<section class="panel left">
+ <div class="heading">COMMAND STATUS <em>●</em></div>
+
+ <div class="section">
+  <div class="label">GLOBAL THREAT LEVEL</div>
+  <div class="bigstatus" id="defcon">DEFCON 5</div>
+  <div class="level" id="levels">
+   <div class="active"></div><div></div><div></div><div></div><div></div>
+  </div>
+ </div>
+
+ <div class="metrics">
+  <div class="metric">
+   <label>OBJECTS</label>
+   <strong id="mobjects">00</strong>
+  </div>
+  <div class="metric">
+   <label>EVENTS</label>
+   <strong id="mevents">000</strong>
+  </div>
+  <div class="metric">
+   <label>ALERTS</label>
+   <strong class="warn" id="malerts">00</strong>
+  </div>
+  <div class="metric">
+   <label>UPTIME</label>
+   <strong id="uptime">00:00</strong>
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="label">SYSTEM STATUS</div>
+  <div style="font-size:11px;color:var(--green)">▰ ALL SYSTEMS NOMINAL</div>
+  <div class="bar"><span></span></div>
+  <div style="font-size:9px;color:#587176;margin-top:7px">
+   NETWORK INTEGRITY // 72%
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="label">SIMULATION CONTROLS</div>
+  <div class="buttons" style="padding:0">
+   <button class="redbtn" onclick="launch()">▶ LAUNCH EVENT</button>
+   <button onclick="pauseSim()">Ⅱ PAUSE</button>
+   <button class="greenbtn" onclick="toggleAuto()">⚡ AUTO</button>
+   <button onclick="resetSim()">↻ RESET</button>
+   <button onclick="raiseAlert()" style="grid-column:span 2">⚠ TEST ALERT</button>
+  </div>
+ </div>
+
+ <div class="section">
+  <div class="label">OPERATION</div>
+  <div style="font-family:Orbitron;font-size:11px;color:var(--cyan)">
+   NIGHTFALL-07
+  </div>
+  <p style="font-size:10px;color:#587176">
+   Training simulation<br>Scenario: Fictional conflict
+  </p>
+ </div>
+
+ <div class="footerstats">
+  <span>BUILD 2.0.7</span><span>LOCAL SIM</span>
+ </div>
+</section>
+
+<!-- MAIN MAP -->
+<section class="panel map">
+ <div class="heading">
+  <span>TACTICAL DISPLAY // SECTOR NIGHTFALL</span>
+  <em id="mapstatus">LIVE FEED</em>
+ </div>
+ <canvas id="world"></canvas>
+ <div class="mapinfo">
+  <div>GRID: FICT-09</div>
+  <div>MODE: VISUAL SIMULATION</div>
+  <div>TRACKING: <span id="trackcount">0</span></div>
+ </div>
+ <div class="maplabel">SYNTHETIC TERRAIN // NOT REAL DATA</div>
+</section>
+
+<!-- BOTTOM -->
+<section class="panel bottom">
+ <div class="heading">OPERATIONAL OVERVIEW <em>LIVE</em></div>
+ <div class="bottominner">
+  <div class="bottomcell">
+   <h4 class="missiontitle">MISSION STATUS</h4>
+   <strong id="mission">STANDBY</strong>
+   <p>Simulation environment</p>
+  </div>
+  <div class="bottomcell">
+   <h4>ACTIVITY</h4>
+   <strong id="activity">0%</strong>
+   <div class="progress"><i id="activitybar" style="width:0%"></i></div>
+  </div>
+  <div class="bottomcell">
+   <h4>VISUAL EFFECTS</h4>
+   <strong>ONLINE</strong>
+   <p>Particles // Radar // Trails</p>
+  </div>
+  <div class="bottomcell">
+   <h4>ENVIRONMENT</h4>
+   <strong>FICTIONAL</strong>
+   <p>Sandbox mode</p>
+  </div>
+ </div>
+</section>
+
+<!-- RIGHT -->
+<section class="right">
+
+ <section class="panel">
+  <div class="heading">RADAR // SCANNER <em>ACTIVE</em></div>
+  <div class="radarbox">
+   <canvas id="radar" width="400" height="400"></canvas>
+   <div class="radartext">360° SCAN // SIMULATED</div>
+  </div>
+ </section>
+
+ <section class="panel">
+  <div class="heading">THREAT MONITOR</div>
+  <div class="threats">
+   <div class="threat">
+    <small>STATUS</small>
+    <strong id="threatstatus">LOW</strong>
+   </div>
+   <div class="threat">
+    <small>TRACKS</small>
+    <strong id="tracks">000</strong>
+   </div>
+   <div class="threat">
+    <small>ALERT MODE</small>
+    <strong id="alertmode">NORMAL</strong>
+   </div>
+   <div class="threat">
+    <small>SIMULATION</small>
+    <strong style="color:var(--green)">ACTIVE</strong>
+   </div>
+  </div>
+ </section>
+
+ <section class="panel" style="flex:1;min-height:180px;display:flex;flex-direction:column">
+  <div class="heading">EVENT FEED <em>● REC</em></div>
+  <div class="log" id="feed"></div>
+ </section>
+
+</section>
+</div>
+
+<script>
+const world=document.getElementById("world");
+const wctx=world.getContext("2d");
+const radar=document.getElementById("radar");
+const rctx=radar.getContext("2d");
+
+let W,H;
+let objects=[];
+let particles=[];
+let blips=[];
+let angle=0;
+let paused=false;
+let auto=false;
+let events=0;
+let alerts=0;
+let start=Date.now();
+let tick=0;
+
+function resize(){
+ const r=world.getBoundingClientRect();
+ world.width=r.width*devicePixelRatio;
+ world.height=r.height*devicePixelRatio;
+ wctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+ W=r.width;H=r.height;
+}
+window.addEventListener("resize",resize);
+resize();
+
+function time(){
+ return new Date().toLocaleTimeString("en-GB");
+}
+function addFeed(message,type="green"){
+ const el=document.createElement("div");
+ el.className=type;
+ el.textContent="["+time()+"] "+message;
+ const feed=document.getElementById("feed");
+ feed.prepend(el);
+ while(feed.children.length>35)feed.lastChild.remove();
+}
+function log(message,type="green"){
+ addFeed(message,type);
+ addFeed(message,type);
+}
+
+function launch(){
+ if(paused)return;
+ const x=Math.random()*W;
+ const y=H+5;
+ const tx=Math.random()*W;
+ const ty=H*.12+Math.random()*H*.55;
+ objects.push({
+  x,y,tx,ty,t:0,
+  speed:.003+Math.random()*.003,
+  color:Math.random()>.5?"#ff4659":"#ffc15c",
+  trail:[]
+ });
+ events++;
+ document.getElementById("mission").textContent="IN PROGRESS";
+ addFeed("VISUAL OBJECT CREATED","red");
+}
+
+function raiseAlert(){
+ alerts++;
+ document.getElementById("malerts").textContent=String(alerts).padStart(2,"0");
+ document.getElementById("alertmode").textContent="WARNING";
+ document.getElementById("alertmode").style.color="var(--red)";
+ document.getElementById("threatstatus").textContent="ELEVATED";
+ document.getElementById("threatstatus").style.color="var(--red)";
+ document.getElementById("defcon").textContent="DEFCON 3";
+ document.getElementById("mapstatus").textContent="ALERT";
+ document.getElementById("mapstatus").style.color="var(--red)";
+ addFeed("SIMULATION ALERT // VISUAL WARNING","red");
+}
+
+function pauseSim(){
+ paused=!paused;
+ addFeed(paused?"SIMULATION PAUSED":"SIMULATION RESUMED","amber");
+}
+function toggleAuto(){
+ auto=!auto;
+ addFeed("AUTO MODE "+(auto?"ENABLED":"DISABLED"),"cyan");
+}
+function resetSim(){
+ objects=[];
+ particles=[];
+ events=0;
+ alerts=0;
+ paused=false;
+ auto=false;
+ start=Date.now();
+ document.getElementById("mission").textContent="STANDBY";
+ document.getElementById("defcon").textContent="DEFCON 5";
+ document.getElementById("malerts").textContent="00";
+ document.getElementById("mobjects").textContent="00";
+ document.getElementById("mevents").textContent="000";
+ document.getElementById("threatstatus").textContent="LOW";
+ document.getElementById("alertmode").textContent="NORMAL";
+ document.getElementById("alertmode").style.color="";
+ document.getElementById("threatstatus").style.color="";
+ document.getElementById("mapstatus").textContent="LIVE FEED";
+ document.getElementById("mapstatus").style.color="";
+ addFeed("SIMULATION RESET","green");
+}
+
+function terrain(){
+ wctx.strokeStyle="rgba(70,130,110,.12)";
+ wctx.lineWidth=1;
+ for(let x=0;x<W;x+=30){
+  wctx.beginPath();wctx.moveTo(x,0);wctx.lineTo(x,H);wctx.stroke();
+ }
+ for(let y=0;y<H;y+=30){
+  wctx.beginPath();wctx.moveTo(0,y);wctx.lineTo(W,y);wctx.stroke();
+ }
+ // Abstract fictional terrain contours
+ for(let i=0;i<15;i++){
+  let x=(i*173)%W;
+  let y=(i*97)%H;
+  wctx.strokeStyle="rgba(44,90,73,.22)";
+  wctx.beginPath();
+  wctx.ellipse(x,y,30+i*3,12+i*2,Math.random()*.1,0,Math.PI*2);
+  wctx.stroke();
+ }
+}
+
+function drawMap(){
+ wctx.clearRect(0,0,W,H);
+ terrain();
+
+ // Fictional zone outlines
+ for(let i=0;i<6;i++){
+  let x=W*(.12+i*.14);
+  let y=H*(.2+(i%3)*.19);
+  wctx.strokeStyle="#314d44";
+  wctx.setLineDash([4,6]);
+  wctx.beginPath();
+  wctx.arc(x,y,25+i*4,0,Math.PI*2);
+  wctx.stroke();
+  wctx.setLineDash([]);
+  wctx.fillStyle="#59766b";
+  wctx.font="10px monospace";
+  wctx.fillText("SECTOR-"+String(i+1).padStart(2,"0"),x+32,y);
+ }
+
+ // Crosshair decorations
+ for(let i=0;i<4;i++){
+  let x=W*(.15+i*.22),y=H*(.17+i*.14);
+  wctx.strokeStyle="#47635c";
+  wctx.beginPath();
+  wctx.moveTo(x-8,y);wctx.lineTo(x+8,y);
+  wctx.moveTo(x,y-8);wctx.lineTo(x,y+8);
+  wctx.stroke();
+ }
+
+ // Animated scan line
+ let sy=(tick*1.3)%H;
+ wctx.fillStyle="rgba(90,255,140,.025)";
+ wctx.fillRect(0,sy,W,3);
+
+ // Object trails
+ objects.forEach(o=>{
+  o.t+=o.speed;
+  let x=o.x+(o.tx-o.x)*o.t;
+  let y=o.y+(o.ty-o.y)*o.t;
+  o.trail.push({x,y});
+  if(o.trail.length>18)o.trail.shift();
+
+  wctx.beginPath();
+  o.trail.forEach((p,i)=>{
+   if(i===0)wctx.moveTo(p.x,p.y);
+   else wctx.lineTo(p.x,p.y);
+  });
+  wctx.strokeStyle=o.color+"88";
+  wctx.lineWidth=2;
+  wctx.stroke();
+
+  wctx.fillStyle=o.color;
+  wctx.shadowBlur=14;
+  wctx.shadowColor=o.color;
+  wctx.beginPath();
+  wctx.arc(x,y,3,0,Math.PI*2);
+  wctx.fill();
+  wctx.shadowBlur=0;
+
+  wctx.fillStyle="#d5e5dd";
+  wctx.font="10px monospace";
+  wctx.fillText("SIM-"+Math.floor(Math.random()*900+100),x+8,y-8);
+
+  if(o.t>=1){
+   createExplosion(x,y);
+   o.done=true;
+  }
+ });
+ objects=objects.filter(o=>!o.done);
+
+ drawParticles();
+}
+
+function createExplosion(x,y){
+ for(let i=0;i<24;i++){
+  let a=Math.random()*Math.PI*2;
+  let s=Math.random()*2.8+1;
+  particles.push({
+   x,y,
+   vx:Math.cos(a)*s,
+   vy:Math.sin(a)*s,
+   life:1,
+   color:Math.random()>.5?"#ff9b4a":"#ff4054"
+  });
+ }
+}
+
+function drawParticles(){
+ particles.forEach(p=>{
+  p.x+=p.vx;p.y+=p.vy;
+  p.vx*=.97;p.vy*=.97;
+  p.life-=.025;
+  wctx.globalAlpha=Math.max(0,p.life);
+  wctx.fillStyle=p.color;
+  wctx.beginPath();
+  wctx.arc(p.x,p.y,2.2,0,Math.PI*2);
+  wctx.fill();
+ });
+ wctx.globalAlpha=1;
+ particles=particles.filter(p=>p.life>0);
+}
+
+function drawRadar(){
+ const size=radar.width;
+ const cx=size/2,cy=size/2,r=size*.45;
+ rctx.clearRect(0,0,size,size);
+
+ rctx.strokeStyle="#1c5136";
+ rctx.lineWidth=1;
+ for(let i=1;i<=4;i++){
+  rctx.beginPath();rctx.arc(cx,cy,r*i/4,0,Math.PI*2);rctx.stroke();
+ }
+ rctx.beginPath();
+ rctx.moveTo(cx-r,cy);rctx.lineTo(cx+r,cy);
+ rctx.moveTo(cx,cy-r);rctx.lineTo(cx,cy+r);
+ rctx.stroke();
+
+ // Sweep
+ angle+=.025;
+ rctx.save();
+ rctx.translate(cx,cy);
+ rctx.rotate(angle);
+ const g=rctx.createLinearGradient(0,0,r,0);
+ g.addColorStop(0,"rgba(50,255,130,0)");
+ g.addColorStop(1,"rgba(50,255,130,.35)");
+ rctx.fillStyle=g;
+ rctx.beginPath();
+ rctx.moveTo(0,0);
+ rctx.arc(0,0,r,-.35,.02);
+ rctx.closePath();
+ rctx.fill();
+ rctx.restore();
+
+ // Random radar blips
+ if(Math.random()<.04){
+  blips.push({
+   x:(Math.random()-.5)*r*1.7,
+   y:(Math.random()-.5)*r*1.7,
+   life:1
+  });
+ }
+ blips.forEach(b=>{
+  b.life-=.004;
+  rctx.fillStyle=`rgba(100,255,160,${b.life})`;
+  rctx.beginPath();
+  rctx.arc(cx+b.x,cy+b.y,3,0,Math.PI*2);
+  rctx.fill();
+ });
+ blips=blips.filter(b=>b.life>0);
+}
+
+function updateUI(){
+ document.getElementById("mobjects").textContent=String(objects.length).padStart(2,"0");
+ document.getElementById("mevents").textContent=String(events).padStart(3,"0");
+ document.getElementById("tracks").textContent=String(objects.length).padStart(3,"0");
+ document.getElementById("trackcount").textContent=objects.length;
+ document.getElementById("activity").textContent=Math.min(objects.length*12,100)+"%";
+ document.getElementById("activitybar").style.width=Math.min(objects.length*12,100)+"%";
+
+ let sec=Math.floor((Date.now()-start)/1000);
+ document.getElementById("uptime").textContent=
+  String(Math.floor(sec/60)).padStart(2,"0")+":"+
+  String(sec%60).padStart(2,"0");
+}
+
+function loop(){
+ requestAnimationFrame(loop);
+ tick++;
+ document.getElementById("clock").textContent=time();
+ if(!paused){
+  drawMap();
+  drawRadar();
+  updateUI();
+  if(auto && Math.random()<.018)launch();
+ }
+}
+loop();
+
+addFeed("BLACK OPS COMMAND INITIALIZED","green");
+addFeed("Fictional training environment ready","cyan");
+addFeed("Waiting for operator input...","amber");
+</script>
+</body>
+</html>
